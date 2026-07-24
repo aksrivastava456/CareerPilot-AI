@@ -11,12 +11,25 @@ app = FastAPI(
     version="1.0.0",
 )
 
+import os
+
+# Get allowed origins from environment (comma-separated) or fallback to defaults
+origins_env = os.getenv("ALLOWED_ORIGINS", "")
+origins = [origin.strip() for origin in origins_env.split(",") if origin.strip()]
+
+default_origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "https://career-pilot-ai-virid.vercel.app"
+]
+
+for origin in default_origins:
+    if origin not in origins:
+        origins.append(origin)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-    ],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
