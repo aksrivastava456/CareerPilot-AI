@@ -26,6 +26,8 @@ def get_resume_status(current_user: dict = Depends(get_current_user)):
     resume_data = resumes_collection.find_one({"user_id": str(current_user["_id"])})
     if resume_data:
         file_path = resume_data.get("file_path", "")
-        filename = os.path.basename(file_path) if file_path else "resume.pdf"
+        # Support cross-platform paths (e.g. db populated on Windows, backend running on Linux Render)
+        normalized_path = file_path.replace("\\", "/")
+        filename = os.path.basename(normalized_path) if normalized_path else "resume.pdf"
         return {"uploaded": True, "filename": filename}
     return {"uploaded": False}
