@@ -12,7 +12,7 @@ def generate_embedding(chunks):
         try:
             client = get_current_client()
             response = client.models.embed_content(
-                model="text-embedding-004",
+                model="gemini-embedding-001",
                 contents=chunks
             )
             embeddings = [e.values for e in response.embeddings]
@@ -43,7 +43,7 @@ def embed_query(query: str):
         try:
             client = get_current_client()
             response = client.models.embed_content(
-                model="text-embedding-004",
+                model="gemini-embedding-001",
                 contents=query
             )
             return np.array([response.embeddings[0].values], dtype=np.float32)
