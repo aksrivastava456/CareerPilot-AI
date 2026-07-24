@@ -3,7 +3,8 @@ import { toast } from "react-toastify";
 import ReactMarkdown from "react-markdown";
 import "./Home.css";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const rawApiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const API_URL = rawApiUrl.endsWith("/") ? rawApiUrl.slice(0, -1) : rawApiUrl;
 
 function parseATS(markdown) {
   if (!markdown) return null;

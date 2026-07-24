@@ -4,7 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { getValidToken } from "../utils/auth.js";
 import "./Login.css";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const rawApiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const API_URL = rawApiUrl.endsWith("/") ? rawApiUrl.slice(0, -1) : rawApiUrl;
 
 export default function Login() {
     const navigate = useNavigate();
