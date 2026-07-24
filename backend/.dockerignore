@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+ENV/
+env/
+.env
+.git
+.gitignore
+indexes/
+uploads/
+inspect_chats.py
+inspect_db.py

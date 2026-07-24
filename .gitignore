@@ -1,0 +1,36 @@
+# Env secrets
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+backend/.env
+
+# Virtual environments
+backend/venv/
+backend/.venv/
+venv/
+.venv/
+ENV/
+env/
+
+# Databases & local indexes
+backend/indexes/
+backend/uploads/
+*.db
+*.sqlite3
+
+# Python Cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Node / Frontend builds
+frontend/node_modules/
+frontend/dist/
+node_modules/
+dist/
+
+# Development helper scripts
+backend/inspect_chats.py
+backend/inspect_db.py
