@@ -4,8 +4,8 @@ from fastapi import HTTPException, status
 import os
 
 from app.database.mongodb import resumes_collection
-from app.services.embedding_service import embed_query
-from app.services.faiss_service import load_faiss_index, search_faiss_index
+from app.services.embedding_service import embed_query, generate_embedding
+from app.services.faiss_service import load_faiss_index, search_faiss_index, create_faiss_index, save_faiss_index
 from app.services.gemini_service import ask_gemini
 from app.services.prompt_service import build_ats_prompt, build_chat_prompt, build_summary_prompt, build_job_match_prompt, build_interview_prompt
 from app.database.mongodb import chats_collection
@@ -67,6 +67,34 @@ def format_chat_history(chat_history):
         text += f"Assistant: {response_snippet}\n"
     return text.strip()
 
+def get_or_create_faiss_index(user_id: str, resume_data: dict):
+    index_path = os.path.join(INDEX_FOLDER, f"{user_id}.index")
+    if os.path.exists(index_path):
+        return load_faiss_index(index_path)
+        
+    print("FAISS index not found on disk. Dynamically rebuilding from MongoDB chunks...")
+    child_chunks = resume_data.get("child_chunks")
+    if not child_chunks:
+        chunks = resume_data.get("chunks")
+        if not chunks:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No chunks found to rebuild FAISS index.")
+        child_texts = chunks
+    else:
+        child_texts = [child["text"] for child in child_chunks]
+        
+    try:
+        embeddings = generate_embedding(child_texts)
+        index = create_faiss_index(embeddings)
+        os.makedirs(INDEX_FOLDER, exist_ok=True)
+        save_faiss_index(index, index_path)
+        print("FAISS index rebuilt and saved successfully.")
+        return index
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to dynamically rebuild FAISS index: {str(e)}"
+        )
+
 def retrieve_context_from_resume(user_id: str, user_query: str, k=5):
     resume_data = resumes_collection.find_one({"user_id": user_id})
     if not resume_data:
@@ -81,11 +109,7 @@ def retrieve_context_from_resume(user_id: str, user_query: str, k=5):
         if not chunks:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No chunks found for the given user ID.")
         
-        index_path = os.path.join(INDEX_FOLDER, f"{user_id}.index")
-        if not index_path or not os.path.exists(index_path):
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="FAISS index not found for the given user ID.")
-        
-        index = load_faiss_index(index_path)
+        index = get_or_create_faiss_index(user_id, resume_data)
         query_embedding = embed_query(user_query)
         top_k_indices = search_faiss_index(index, query_embedding, k=TOP_K)
         
@@ -94,11 +118,7 @@ def retrieve_context_from_resume(user_id: str, user_query: str, k=5):
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No relevant chunks found for the given query.")
         return "\n\n".join(relevant_chunks)
     
-    index_path = os.path.join(INDEX_FOLDER, f"{user_id}.index")
-    if not index_path or not os.path.exists(index_path):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="FAISS index not found for the given user ID.")
-    
-    index = load_faiss_index(index_path)
+    index = get_or_create_faiss_index(user_id, resume_data)
     query_embedding = embed_query(user_query)
     top_k_indices = search_faiss_index(index, query_embedding, k=TOP_K)
 
