@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
 import Home from "./pages/Home.jsx";
 import Register from "./pages/Register.jsx";
@@ -6,6 +7,13 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 function App() {
+  useEffect(() => {
+    // Pre-warm Render backend on initial mount
+    const rawApiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
+    const API_URL = rawApiUrl.endsWith("/") ? rawApiUrl.slice(0, -1) : rawApiUrl;
+    fetch(API_URL).catch(() => {});
+  }, []);
+
   return (
     <div>
       <Routes>

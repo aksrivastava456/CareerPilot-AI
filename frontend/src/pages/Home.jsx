@@ -10,7 +10,7 @@ import JobsPanel from "./Jobs.jsx";
 import ChatPanel from "./Chat.jsx";
 
 // ==================== DASHBOARD PANEL ====================
-function DashboardPanel({ userProfile, userEmail, resumeStatus, setActiveTab, setAutoTriggerAction }) {
+function DashboardPanel({ userProfile, userEmail, resumeStatus, loadingResume, setActiveTab, setAutoTriggerAction }) {
   return (
     <section className="home-panel" style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "16px", justifyContent: "flex-start", height: "fit-content", flex: "0 1 auto" }}>
       {/* Welcome Section */}
@@ -53,7 +53,7 @@ function DashboardPanel({ userProfile, userEmail, resumeStatus, setActiveTab, se
             )}
           </div>
           <h3 style={{ margin: "4px 0 0", fontSize: "1.2rem", fontWeight: 700, color: "var(--text)" }}>
-            {resumeStatus.uploaded ? resumeStatus.filename : "No active resume loaded"}
+            {loadingResume ? "Loading Resume..." : (resumeStatus.uploaded ? resumeStatus.filename : "No active resume loaded")}
           </h3>
         </div>
         <button 
@@ -140,6 +140,7 @@ export default function Home() {
   // Hoisted States to persist data on unmount (tab changes)
   const [chatHistory, setChatHistory] = useState([]);
   const [resumeStatus, setResumeStatus] = useState({ uploaded: false, filename: "" });
+  const [loadingResume, setLoadingResume] = useState(true);
   const [jobDescription, setJobDescription] = useState("");
   const [jobMatch, setJobMatch] = useState("");
   const [interviewQuestions, setInterviewQuestions] = useState("");
@@ -168,6 +169,7 @@ export default function Home() {
 
     async function fetchResumeStatus() {
       try {
+        setLoadingResume(true);
         const response = await fetch(`${API_URL}/resume/status`, {
           method: "GET",
           headers: {
@@ -182,6 +184,8 @@ export default function Home() {
         }
       } catch (err) {
         console.error("Failed to fetch resume status:", err);
+      } finally {
+        setLoadingResume(false);
       }
     }
 
@@ -443,6 +447,7 @@ export default function Home() {
               userProfile={userProfile}
               userEmail={userEmail}
               resumeStatus={resumeStatus}
+              loadingResume={loadingResume}
               setActiveTab={setActiveTab}
               setAutoTriggerAction={setAutoTriggerAction}
             />
@@ -458,7 +463,9 @@ export default function Home() {
               </div>
               
               <div className="panel-content">
-                {resumeStatus.uploaded ? (
+                {loadingResume ? (
+                  <p style={{ color: "var(--muted)", fontSize: "0.95rem" }}>Loading resume status...</p>
+                ) : resumeStatus.uploaded ? (
                   <div style={{ textAlign: "left", display: "grid", gap: "16px" }}>
                     <div>
                       <p style={{ margin: "0 0 4px", fontSize: "0.75rem", color: "#64748b", fontWeight: 600, textTransform: "uppercase" }}>Active Resume</p>

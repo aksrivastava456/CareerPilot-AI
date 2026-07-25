@@ -9,6 +9,7 @@ const API_URL = rawApiUrl.endsWith("/") ? rawApiUrl.slice(0, -1) : rawApiUrl;
 
 export default function Login() {
     const navigate = useNavigate();
+    const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
         email: "",
         password: ""
@@ -29,6 +30,7 @@ export default function Login() {
 
     async function handleSubmit(event) {
         event.preventDefault();
+        setLoading(true);
         try {
             const params = new URLSearchParams();
             params.append("username", formData.email);
@@ -52,9 +54,11 @@ export default function Login() {
                 setTimeout(() => navigate("/"), 1000);
             } else {
                 toast.error(data.detail || "Login failed. Please try again.");
+                setLoading(false);
             }
         } catch (err) {
             toast.error("An error occurred while logging in");
+            setLoading(false);
         }
     }
 
@@ -72,7 +76,9 @@ export default function Login() {
                         <label htmlFor="password">Password:</label>
                         <input type="password" id="password" name="password" onChange={handleChange} required />
                     </div>
-                    <button type="submit">Login</button>
+                    <button type="submit" disabled={loading}>
+                        {loading ? "Logging in..." : "Login"}
+                    </button>
                 </form>
             </section>
         </main>

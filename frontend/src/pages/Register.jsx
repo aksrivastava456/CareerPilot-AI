@@ -3,10 +3,12 @@ import { useState } from "react";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const rawApiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const API_URL = rawApiUrl.endsWith("/") ? rawApiUrl.slice(0, -1) : rawApiUrl;
 
 export default function Register() {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -22,6 +24,7 @@ export default function Register() {
 
   async function handleSubmit(event) {
     event.preventDefault();
+    setLoading(true);
     try {
       const response = await fetch(`${API_URL}/auth/register`, {
         method: "POST",
@@ -37,9 +40,11 @@ export default function Register() {
         setTimeout(() => navigate("/login"), 1000);
       } else {
         toast.error(data.detail || "Registration failed. Please try again.");
+        setLoading(false);
       }
     } catch (error) {
       toast.error("Error registering user");
+      setLoading(false);
     }
   }
 
@@ -80,7 +85,9 @@ export default function Register() {
               required
             />
           </div>
-          <button type="submit">Register</button>
+          <button type="submit" disabled={loading}>
+            {loading ? "Registering..." : "Register"}
+          </button>
         </form>
       </section>
     </main>
